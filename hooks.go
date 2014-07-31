@@ -10,6 +10,12 @@ const (
 	project_url_hook  = "/projects/:id/hooks/:hook_id" // Get single project hook
 )
 
+type Hook struct {
+	Id           int    `json:"id,omitempty"`
+	Url          string `json:"url,omitempty"`
+	CreatedAtRaw string `json:"created_at,omitempty"`
+}
+
 /*
 Get list of project hooks.
 
@@ -22,12 +28,12 @@ Parameters:
 */
 func (g *Gitlab) ProjectHooks(id string) ([]*Hook, error) {
 
-	url := g.ResourceUrl(project_url_hooks, map[string]string{":id": id})
+	url, opaque := g.ResourceUrlRaw(project_url_hooks, map[string]string{":id": id})
 
 	var err error
 	var hooks []*Hook
 
-	contents, err := g.buildAndExecRequest("GET", url, nil)
+	contents, err := g.buildAndExecRequestRaw("GET", url, opaque, nil)
 	if err != nil {
 		return hooks, err
 	}
@@ -50,15 +56,15 @@ Parameters:
 */
 func (g *Gitlab) ProjectHook(id, hook_id string) (*Hook, error) {
 
-	url := g.ResourceUrl(project_url_hook, map[string]string{
+	url, opaque := g.ResourceUrlRaw(project_url_hook, map[string]string{
 		":id":      id,
 		":hook_id": hook_id,
 	})
 
 	var err error
-	var hook *Hook
+	hook := new(Hook)
 
-	contents, err := g.buildAndExecRequest("GET", url, nil)
+	contents, err := g.buildAndExecRequestRaw("GET", url, opaque, nil)
 	if err != nil {
 		return hook, err
 	}
@@ -84,12 +90,12 @@ Parameters:
 */
 func (g *Gitlab) AddProjectHook(id, hook_url string, push_events, issues_events, merge_requests_events bool) error {
 
-	url := g.ResourceUrl(project_url_hooks, map[string]string{":id": id})
+	url, opaque := g.ResourceUrlRaw(project_url_hooks, map[string]string{":id": id})
 
 	var err error
 
 	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events)
-	_, err = g.buildAndExecRequest("POST", url, []byte(body))
+	_, err = g.buildAndExecRequestRaw("POST", url, opaque, []byte(body))
 
 	return err
 }
@@ -111,7 +117,7 @@ Parameters:
 */
 func (g *Gitlab) EditProjectHook(id, hook_id, hook_url string, push_events, issues_events, merge_requests_events bool) error {
 
-	url := g.ResourceUrl(project_url_hook, map[string]string{
+	url, opaque := g.ResourceUrlRaw(project_url_hook, map[string]string{
 		":id":      id,
 		":hook_id": hook_id,
 	})
@@ -119,7 +125,7 @@ func (g *Gitlab) EditProjectHook(id, hook_id, hook_url string, push_events, issu
 	var err error
 
 	body := buildHookQuery(hook_url, push_events, issues_events, merge_requests_events)
-	_, err = g.buildAndExecRequest("PUT", url, []byte(body))
+	_, err = g.buildAndExecRequestRaw("PUT", url, opaque, []byte(body))
 
 	return err
 }
@@ -137,14 +143,14 @@ Parameters:
 */
 func (g *Gitlab) RemoveProjectHook(id, hook_id string) error {
 
-	url := g.ResourceUrl(project_url_hook, map[string]string{
+	url, opaque := g.ResourceUrlRaw(project_url_hook, map[string]string{
 		":id":      id,
 		":hook_id": hook_id,
 	})
 
 	var err error
 
-	_, err = g.buildAndExecRequest("DELETE", url, nil)
+	_, err = g.buildAndExecRequestRaw("DELETE", url, opaque, nil)
 
 	return err
 }

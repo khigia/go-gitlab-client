@@ -3,12 +3,13 @@ package gogitlab
 
 import (
 	"bytes"
-	"errors"
+	"crypto/tls"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
-	"time"
 )
 
 const (
@@ -23,94 +24,22 @@ type Gitlab struct {
 	Client       *http.Client
 }
 
-type Member struct {
-	Id        int
-	Username  string
-	Email     string
-	Name      string
-	State     string
-	CreatedAt string `json:"created_at,omitempty"`
-	// AccessLevel int
-}
-
-type Namespace struct {
-	Id          int
-	Name        string
-	Path        string
-	Description string
-	Owner_Id    int
-	Created_At  string
-	Updated_At  string
-}
-
-type Branch struct {
-	Name      string        `json:"name,omitempty"`
-	Protected bool          `json:"protected,omitempty"`
-	Commit    *BranchCommit `json:"commit,omitempty"`
-}
-
-type Tag struct {
-	Name      string        `json:"name,omitempty"`
-	Protected bool          `json:"protected,omitempty"`
-	Commit    *BranchCommit `json:"commit,omitempty"`
-}
-
-type BranchCommit struct {
-	Id               string  `json:"id,omitempty"`
-	Tree             string  `json:"tree,omitempty"`
-	AuthoredDateRaw  string  `json:"authored_date,omitempty"`
-	CommittedDateRaw string  `json:"committed_date,omitempty"`
-	Message          string  `json:"message,omitempty"`
-	Author           *Person `json:"author,omitempty"`
-	Committer        *Person `json:"committer,omitempty"`
-	/*
-			"parents": [
-			  {"id": "9b0c4b08e7890337fc8111e66f809c8bbec467a9"},
-		      {"id": "3ac634dca850cab70ab14b43ad6073d1e0a7827f"}
-		    ]
-	*/
-}
-
-type Commit struct {
-	Id           string
-	Short_Id     string
-	Title        string
-	Author_Name  string
-	Author_Email string
-	Created_At   string
-	CreatedAt    time.Time
-}
-
-type Hook struct {
-	Id           int    `json:"id,omitempty"`
-	Url          string `json:"url,omitempty"`
-	CreatedAtRaw string `json:"created_at,omitempty"`
-}
-
-type Link struct {
-	Rel  string `xml:"rel,attr,omitempty"json:"rel"`
-	Href string `xml:"href,attr"json:"href"`
-}
-
-type Person struct {
-	Name  string `xml:"name"json:"name"`
-	Email string `xml:"email"json:"email"`
-}
-
-type DeployKey struct {
-	Id           int    `json:"id,omitempty"`
-	Title        string `json:"title,omitempty"`
-	Key          string `json:"key,omitempty"`
-	CreatedAtRaw string `json:"created_at,omitempty"`
-}
-
 const (
 	dateLayout = "2006-01-02T15:04:05-07:00"
 )
 
-func NewGitlab(baseUrl, apiPath, token string) *Gitlab {
+var (
+	skipCertVerify = flag.Bool("gitlab.skip-cert-check", false,
+		`If set to true, gitlab client will skip certificate checking for https, possibly exposing your system to MITM attack.`)
+)
 
-	client := &http.Client{}
+func NewGitlab(baseUrl, apiPath, token string) *Gitlab {
+	config := &tls.Config{InsecureSkipVerify: *skipCertVerify}
+	tr := &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
+		TLSClientConfig: config,
+	}
+	client := &http.Client{Transport: tr}
 
 	return &Gitlab{
 		BaseUrl: baseUrl,
@@ -129,7 +58,6 @@ func (g *Gitlab) ResourceUrl(url string, params map[string]string) string {
 	}
 
 	url = g.BaseUrl + g.ApiPath + url + "?private_token=" + g.Token
-
 	return url
 }
 
@@ -149,6 +77,9 @@ func (g *Gitlab) buildAndExecRequest(method, url string, body []byte) ([]byte, e
 	}
 
 	resp, err := g.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Client.Do error: %q", err)
+	}
 	defer resp.Body.Close()
 	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -156,7 +87,61 @@ func (g *Gitlab) buildAndExecRequest(method, url string, body []byte) ([]byte, e
 	}
 
 	if resp.StatusCode >= 400 {
-		err = errors.New("*Gitlab.buildAndExecRequest failed: " + resp.Status)
+		err = fmt.Errorf("*Gitlab.buildAndExecRequest failed: <%d> %s", resp.StatusCode, req.URL)
+	}
+
+	return contents, err
+}
+
+func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, string) {
+
+	if params != nil {
+		for key, val := range params {
+			u = strings.Replace(u, key, val, -1)
+		}
+	}
+
+	path := u
+	u = g.BaseUrl + g.ApiPath + path + "?private_token=" + g.Token
+	p, err := url.Parse(u)
+	if err != nil {
+		return u, ""
+	}
+	opaque := "//" + p.Host + g.ApiPath + path
+	return u, opaque
+}
+
+func (g *Gitlab) buildAndExecRequestRaw(method, url, opaque string, body []byte) ([]byte, error) {
+
+	var req *http.Request
+	var err error
+
+	if body != nil {
+		reader := bytes.NewReader(body)
+		req, err = http.NewRequest(method, url, reader)
+	} else {
+		req, err = http.NewRequest(method, url, nil)
+	}
+	if err != nil {
+		panic("Error while building gitlab request")
+	}
+
+	if len(opaque) > 0 {
+		req.URL.Opaque = opaque
+	}
+
+	resp, err := g.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("Client.Do error: %q", err)
+	}
+	defer resp.Body.Close()
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("%s", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		err = fmt.Errorf("*Gitlab.buildAndExecRequestRaw failed: <%d> %s", resp.StatusCode, req.URL)
 	}
 
 	return contents, err
