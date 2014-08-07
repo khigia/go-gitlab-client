@@ -12,6 +12,7 @@ const (
 type Session struct {
 	Id               int    `json:"id,omitempty"`
 	UserName         string `json:"username,omitempty"`
+	Name             string `json:"name,omitempty"`
 	State            string `json:"state,omitempty"`
 	AvatarURL        string `json:"avatar_url",omitempty`
 	IsAdmin          bool   `json:"is_admin",omitempty`
