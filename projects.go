@@ -2,6 +2,8 @@ package gogitlab
 
 import (
 	"encoding/json"
+	"fmt"
+	"strconv"
 )
 
 const (
@@ -71,15 +73,46 @@ type Project struct {
 }
 
 /*
+Get a list of all projects owned by the authenticated user.
+*/
+func (g *Gitlab) AllProjects() ([]*Project, error) {
+	var per_page = 100
+	var projects []*Project
+
+	for i := 1; true; i++ {
+		contents, err := g.Projects(i, per_page)
+		if err != nil {
+			return projects, err
+		}
+
+		for _, value := range contents {
+			projects = append(projects, value)
+		}
+
+		if len(projects) == 0 {
+			break
+		}
+
+		if len(projects)/i < per_page {
+			break
+		}
+	}
+
+	return projects, nil
+}
+
+/*
 Get a list of projects owned by the authenticated user.
 */
-func (g *Gitlab) Projects() ([]*Project, error) {
+func (g *Gitlab) Projects(page int, per_page int) ([]*Project, error) {
 
 	url := g.ResourceUrl(projects_url, nil)
 
 	var projects []*Project
 
-	contents, err := g.buildAndExecRequest("GET", url, nil)
+	params_url := fmt.Sprintf("%s&page=%s&per_page=%s", url, strconv.Itoa(page), strconv.Itoa(per_page))
+
+	contents, err := g.buildAndExecRequest("GET", params_url, nil)
 	if err == nil {
 		err = json.Unmarshal(contents, &projects)
 	}
