@@ -14,6 +14,7 @@ type User struct {
 	Id            int    `json:"id,omitempty"`
 	Username      string `json:"username,omitempty"`
 	Email         string `json:"email,omitempty"`
+	AvatarUrl     string `json:"avatar_url,omitempty"`
 	Name          string `json:"name,omitempty"`
 	State         string `json:"state,omitempty"`
 	CreatedAt     string `json:"created_at,omitempty"`
