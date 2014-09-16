@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/plouc/go-gitlab-client"
+	"github.com/bugagazavr/go-gitlab-client"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -30,7 +30,9 @@ func main() {
 	json.Unmarshal(file, &config)
 	fmt.Printf("Results: %+v\n", config)
 
-	gitlab := gogitlab.NewGitlab(config.Host, config.ApiPath, config.Token)
+	var gitlab *gogitlab.Gitlab
+
+	gitlab = gogitlab.NewGitlab(config.Host, config.ApiPath, config.Token)
 
 	var method string
 	flag.StringVar(&method, "m", "", "Specify method to retrieve projects infos, available methods:\n"+
@@ -63,7 +65,7 @@ func main() {
 	case "projects":
 		fmt.Println("Fetching projects…")
 
-		projects, err := gitlab.Projects()
+		projects, err := gitlab.Projects(1, 100)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
