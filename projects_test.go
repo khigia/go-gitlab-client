@@ -7,7 +7,7 @@ import (
 
 func TestProjects(t *testing.T) {
 	ts, gitlab := Stub("stubs/projects/index.json")
-	projects, err := gitlab.Projects()
+	projects, err := gitlab.Projects(1, 100)
 
 	assert.Equal(t, err, nil)
 	assert.Equal(t, len(projects), 2)
