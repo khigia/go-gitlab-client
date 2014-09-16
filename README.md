@@ -3,7 +3,7 @@ go-gitlab-client
 
 go-gitlab-client is a simple client written in golang to consume gitlab API.
 
-[![Build Status](https://travis-ci.org/plouc/go-gitlab-client.png?branch=master)](https://travis-ci.org/plouc/go-gitlab-client)
+[![Build Status](https://drone.io/github.com/Bugagazavr/go-gitlab-client/status.png)](https://drone.io/github.com/Bugagazavr/go-gitlab-client/latest)
 
 
 ##features
