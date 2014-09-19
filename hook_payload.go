@@ -90,8 +90,14 @@ func ParseHook(payload []byte) (*HookPayload, error) {
 // This function returns "unknown" type if event not supported
 func (h *HookPayload) Type() string {
 	switch {
+	case strings.HasPrefix(h.Ref, "refs/heads/") && len(h.After) == 0:
+		return "branch_deleted"
+	case strings.HasPrefix(h.Ref, "refs/heads/") && len(h.Before) == 0:
+		return "branch"
 	case strings.HasPrefix(h.Ref, "refs/heads/"):
 		return "commit"
+	case strings.HasPrefix(h.Ref, "refs/tags/") && len(h.After) == 0:
+		return "tag_deleted"
 	case strings.HasPrefix(h.Ref, "refs/tags/"):
 		return "tag"
 	case h.ObjectKind == "issue":
