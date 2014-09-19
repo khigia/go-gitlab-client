@@ -86,6 +86,29 @@ func ParseHook(payload []byte) (*HookPayload, error) {
 	return &hp, nil
 }
 
+// Type return current event type
+// This function returns "unknown" type if event not supported
+func (h *HookPayload) Type() string {
+	switch {
+	case strings.HasPrefix(h.Ref, "refs/heads/"):
+		return "commit"
+	case strings.HasPrefix(h.Ref, "refs/tags/"):
+		return "tag"
+	case h.ObjectKind == "issue":
+		return "issue"
+	case h.ObjectKind == "merge_request":
+		return "merge_request"
+	default:
+		return "unknown"
+	}
+}
+
+// Tag returns current tag for push event hook payload
+// This function returns empty string for any other events
+func (h *HookPayload) Tag() string {
+	return strings.TrimPrefix(h.Ref, "refs/tags/")
+}
+
 // Branch returns current branch for push event hook payload
 // This function returns empty string for any other events
 func (h *HookPayload) Branch() string {
