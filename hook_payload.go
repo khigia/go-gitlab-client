@@ -28,6 +28,17 @@ type HookObjAttr struct {
 	StDiffs         string    `json:"st_diffs,omitempty"`
 	MergeStatus     string    `json:"merge_status,omitempty"`
 	TargetProjectId int       `json:"target_project_id,omitempty"`
+	Source          *hProject `json:"source,omitempty"`
+	Target          *hProject `json:"target,omitempty"`
+	LastCommit      *hCommit  `json:"last_commit,omitempty"`
+}
+
+type hProject struct {
+	Name            string `json:"name"`
+	SshUrl          string `json:"ssh_url"`
+	HttpUrl         string `json:"ssh_url"`
+	VisibilityLevel int    `json:"visibility_level"`
+	Namespace       string `json:"namespace"`
 }
 
 type hRepository struct {
