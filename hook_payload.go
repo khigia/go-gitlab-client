@@ -36,7 +36,7 @@ type HookObjAttr struct {
 type hProject struct {
 	Name            string `json:"name"`
 	SshUrl          string `json:"ssh_url"`
-	HttpUrl         string `json:"ssh_url"`
+	HttpUrl         string `json:"http_url"`
 	VisibilityLevel int    `json:"visibility_level"`
 	Namespace       string `json:"namespace"`
 }
@@ -49,11 +49,11 @@ type hRepository struct {
 }
 
 type hCommit struct {
-	Id        string  `json:"id,omitempty"`
-	Message   string  `json:"message,omitempty"`
-	Timestamp string  `json:"timestamp,omitempty"`
-	URL       string  `json:"url,omitempty"`
-	Author    *Person `json:"author,omitempty"`
+	Id        string    `json:"id,omitempty"`
+	Message   string    `json:"message,omitempty"`
+	Timestamp time.Time `json:"timestamp,omitempty"`
+	URL       string    `json:"url,omitempty"`
+	Author    *Person   `json:"author,omitempty"`
 }
 
 type HookPayload struct {
@@ -95,6 +95,35 @@ func ParseHook(payload []byte) (*HookPayload, error) {
 	}
 
 	return &hp, nil
+}
+
+// Type return current event type
+// This function returns "unknown" type if event not supported
+func (h *HookPayload) Type() string {
+	switch {
+	case strings.HasPrefix(h.Ref, "refs/heads/") && len(h.After) == 0:
+		return "branch_deleted"
+	case strings.HasPrefix(h.Ref, "refs/heads/") && len(h.Before) == 0:
+		return "branch"
+	case strings.HasPrefix(h.Ref, "refs/heads/"):
+		return "commit"
+	case strings.HasPrefix(h.Ref, "refs/tags/") && len(h.After) == 0:
+		return "tag_deleted"
+	case strings.HasPrefix(h.Ref, "refs/tags/"):
+		return "tag"
+	case h.ObjectKind == "issue":
+		return "issue"
+	case h.ObjectKind == "merge_request":
+		return "merge_request"
+	default:
+		return "unknown"
+	}
+}
+
+// Tag returns current tag for push event hook payload
+// This function returns empty string for any other events
+func (h *HookPayload) Tag() string {
+	return strings.TrimPrefix(h.Ref, "refs/tags/")
 }
 
 // Branch returns current branch for push event hook payload
