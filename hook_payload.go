@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 )
 
 type HookObjAttr struct {
@@ -13,8 +12,8 @@ type HookObjAttr struct {
 	AssigneeId      int       `json:"assignee_id,omitempty"`
 	AuthorId        int       `json:"author_id,omitempty"`
 	ProjectId       int       `json:"project_id,omitempty"`
-	CreatedAt       time.Time `json:"created_at,omitempty"`
-	UpdatedAt       time.Time `json:"updated_at,omitempty"`
+	CreatedAt       string    `json:"created_at,omitempty"`
+	UpdatedAt       string    `json:"updated_at,omitempty"`
 	Position        int       `json:"position,omitempty"`
 	BranchName      string    `json:"branch_name,omitempty"`
 	Description     string    `json:"description,omitempty"`
@@ -49,11 +48,11 @@ type hRepository struct {
 }
 
 type hCommit struct {
-	Id        string    `json:"id,omitempty"`
-	Message   string    `json:"message,omitempty"`
-	Timestamp time.Time `json:"timestamp,omitempty"`
-	URL       string    `json:"url,omitempty"`
-	Author    *Person   `json:"author,omitempty"`
+	Id        string  `json:"id,omitempty"`
+	Message   string  `json:"message,omitempty"`
+	Timestamp string  `json:"timestamp,omitempty"`
+	URL       string  `json:"url,omitempty"`
+	Author    *Person `json:"author,omitempty"`
 }
 
 type HookPayload struct {
