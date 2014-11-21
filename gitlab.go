@@ -53,7 +53,7 @@ func (g *Gitlab) ResourceUrl(url string, params map[string]string) string {
 
 	if params != nil {
 		for key, val := range params {
-			url = strings.Replace(url, key, val, -1)
+			url = strings.Replace(url, key, encodeParameter(val), -1)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, str
 
 	if params != nil {
 		for key, val := range params {
-			u = strings.Replace(u, key, val, -1)
+			u = strings.Replace(u, key, encodeParameter(val), -1)
 		}
 	}
 
@@ -107,7 +107,7 @@ func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, str
 	if err != nil {
 		return u, ""
 	}
-	opaque := "//" + p.Host + g.ApiPath + path
+	opaque := "//" + p.Host + p.Path
 	return u, opaque
 }
 
