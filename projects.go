@@ -2,7 +2,6 @@ package gogitlab
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 )
 
@@ -107,13 +106,11 @@ Get a list of projects owned by the authenticated user.
 */
 func (g *Gitlab) Projects(page int, per_page int) ([]*Project, error) {
 
-	url := g.ResourceUrl(projects_url, nil)
+	url := g.ResourceUrlQuery(projects_url, nil, map[string]string{"page": strconv.Itoa(page), "per_page": strconv.Itoa(per_page)})
 
 	var projects []*Project
 
-	params_url := fmt.Sprintf("%s&page=%s&per_page=%s", url, strconv.Itoa(page), strconv.Itoa(per_page))
-
-	contents, err := g.buildAndExecRequest("GET", params_url, nil)
+	contents, err := g.buildAndExecRequest("GET", url, nil)
 	if err == nil {
 		err = json.Unmarshal(contents, &projects)
 	}

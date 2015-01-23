@@ -21,6 +21,7 @@ type Gitlab struct {
 	ApiPath      string
 	RepoFeedPath string
 	Token        string
+	Bearer       bool
 	Client       *http.Client
 }
 
@@ -61,7 +62,10 @@ func (g *Gitlab) ResourceUrl(url string, params map[string]string) string {
 		}
 	}
 
-	url = g.BaseUrl + g.ApiPath + url + "?private_token=" + g.Token
+	url = g.BaseUrl + g.ApiPath + url
+	if !g.Bearer {
+		url = url + "?private_token=" + g.Token
+	}
 	return url
 }
 
@@ -78,6 +82,10 @@ func (g *Gitlab) buildAndExecRequest(method, url string, body []byte) ([]byte, e
 	}
 	if err != nil {
 		panic("Error while building gitlab request")
+	}
+
+	if g.Bearer {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", g.Token))
 	}
 
 	resp, err := g.Client.Do(req)
@@ -97,6 +105,29 @@ func (g *Gitlab) buildAndExecRequest(method, url string, body []byte) ([]byte, e
 	return contents, err
 }
 
+func (g *Gitlab) ResourceUrlQuery(u string, params, query map[string]string) string {
+	if params != nil {
+		for key, val := range params {
+			u = strings.Replace(u, key, encodeParameter(val), -1)
+		}
+	}
+
+	query_params := url.Values{}
+	if !g.Bearer {
+		query_params.Add("private_token", g.Token)
+	}
+
+	if query != nil {
+		for key, val := range query {
+			query_params.Set(key, val)
+		}
+	}
+
+	u = g.BaseUrl + g.ApiPath + u + "?" + query_params.Encode()
+	return u
+
+}
+
 func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, string) {
 
 	if params != nil {
@@ -106,7 +137,11 @@ func (g *Gitlab) ResourceUrlRaw(u string, params map[string]string) (string, str
 	}
 
 	path := u
-	u = g.BaseUrl + g.ApiPath + path + "?private_token=" + g.Token
+	u = g.BaseUrl + g.ApiPath + path
+	if !g.Bearer {
+		u = u + "?private_token=" + g.Token
+	}
+
 	p, err := url.Parse(u)
 	if err != nil {
 		return u, ""
@@ -128,6 +163,10 @@ func (g *Gitlab) buildAndExecRequestRaw(method, url, opaque string, body []byte)
 	}
 	if err != nil {
 		panic("Error while building gitlab request")
+	}
+
+	if g.Bearer {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", g.Token))
 	}
 
 	if len(opaque) > 0 {
