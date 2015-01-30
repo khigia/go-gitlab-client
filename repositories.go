@@ -2,6 +2,7 @@ package gogitlab
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 )
 
@@ -189,14 +190,20 @@ func (g *Gitlab) RepoCommits(id string) ([]*Commit, error) {
 Get Raw file content
 */
 func (g *Gitlab) RepoRawFile(id, sha, filepath string) ([]byte, error) {
-
-	url, opaque := g.ResourceUrlRaw(repo_url_raw_file, map[string]string{
+	url_ := g.ResourceUrlQuery(repo_url_raw_file, map[string]string{
 		":id":  id,
 		":sha": sha,
+	}, map[string]string{
+		"filepath": filepath,
 	})
-	url += "&filepath=" + filepath
 
-	contents, err := g.buildAndExecRequestRaw("GET", url, opaque, nil)
+	p, err := url.Parse(url_)
+	if err != nil {
+		return nil, err
+	}
+
+	opaque := "//" + p.Host + p.Path
+	contents, err := g.buildAndExecRequestRaw("GET", url_, opaque, nil)
 
 	return contents, err
 }
