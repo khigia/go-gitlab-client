@@ -96,7 +96,9 @@ func main() {
 		fmt.Printf(format, "name", project.Name)
 		fmt.Printf(format, "description", project.Description)
 		fmt.Printf(format, "default branch", project.DefaultBranch)
-		fmt.Printf(format, "owner.name", project.Owner.Username)
+		if project.Owner != nil {
+			fmt.Printf(format, "owner.name", project.Owner.Username)
+		}
 		fmt.Printf(format, "public", strconv.FormatBool(project.Public))
 		fmt.Printf(format, "path", project.Path)
 		fmt.Printf(format, "path with namespace", project.PathWithNamespace)
