@@ -37,10 +37,11 @@ func main() {
 	var method string
 	flag.StringVar(&method, "m", "", "Specify method to retrieve projects infos, available methods:\n"+
 		"  > -m projects\n"+
-		"  > -m project  -id PROJECT_ID\n"+
-		"  > -m hooks    -id PROJECT_ID\n"+
-		"  > -m branches -id PROJECT_ID\n"+
-		"  > -m team     -id PROJECT_ID")
+		"  > -m project        -id PROJECT_ID\n"+
+		"  > -m hooks          -id PROJECT_ID\n"+
+		"  > -m branches       -id PROJECT_ID\n"+
+		"  > -m merge_requests -id PROJECT_ID\n"+
+		"  > -m team           -id PROJECT_ID")
 
 	var id string
 	flag.StringVar(&id, "id", "", "Specify repository id")
@@ -123,6 +124,34 @@ func main() {
 
 		for _, branch := range branches {
 			fmt.Printf("> %s\n", branch.Name)
+		}
+
+	case "merge_requests":
+		fmt.Println("Fetching project merge_requests…")
+
+		if id == "" {
+			flag.Usage()
+			return
+		}
+
+		mrs, err := gitlab.ProjectMergeRequests(id, 0, 30, "opened")
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		for _, mr := range mrs {
+			author := ""
+			if mr.Author != nil {
+				author = mr.Author.Username
+			}
+			assignee := ""
+			if mr.Assignee != nil {
+				assignee = mr.Assignee.Username
+			}
+			fmt.Printf("  %s -> %s [%s] author[%s] assignee[%s]\n",
+				mr.SourceBranch, mr.TargetBranch, mr.State,
+				author, assignee)
 		}
 
 	case "hooks":
