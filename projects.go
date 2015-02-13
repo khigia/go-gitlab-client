@@ -6,13 +6,14 @@ import (
 )
 
 const (
-	projects_url         = "/projects"                         // Get a list of projects owned by the authenticated user
-	projects_search_url  = "/projects/search/:query"           // Search for projects by name
-	project_url          = "/projects/:id"                     // Get a specific project, identified by project ID or NAME
-	project_url_events   = "/projects/:id/events"              // Get project events
-	project_url_branches = "/projects/:id/repository/branches" // Lists all branches of a project
-	project_url_members  = "/projects/:id/members"             // List project team members
-	project_url_member   = "/projects/:id/members/:user_id"    // Get project team member
+	projects_url               = "/projects"                         // Get a list of projects owned by the authenticated user
+	projects_search_url        = "/projects/search/:query"           // Search for projects by name
+	project_url                = "/projects/:id"                     // Get a specific project, identified by project ID or NAME
+	project_url_events         = "/projects/:id/events"              // Get project events
+	project_url_branches       = "/projects/:id/repository/branches" // Lists all branches of a project
+	project_url_members        = "/projects/:id/members"             // List project team members
+	project_url_member         = "/projects/:id/members/:user_id"    // Get project team member
+	project_url_merge_requests = "/projects/:id/merge_requests"      // List all merge requests of a project
 )
 
 type Member struct {
@@ -70,6 +71,21 @@ type Project struct {
 	HttpRepoUrl          string       `json:"http_url_to_repo"`
 	Url                  string       `json:"web_url"`
 	Permissions          *Permissions `json:"permissions,omitempty"`
+}
+
+type MergeRequest struct {
+	Id int `json:"id,omitempty"`
+	// IId
+	TargetBranch string  `json:"target_branch,omitempty"`
+	SourceBranch string  `json:"source_branch,omitempty"`
+	ProjectId    int     `json:"project_id,omitempty"`
+	Title        string  `json:"title,omitempty"`
+	State        string  `json:"state,omitempty"`
+	Upvotes      int     `json:"upvotes,omitempty"`
+	Downvotes    int     `json:"downvotes,omitempty"`
+	Author       *Member `json:"author,omitempty"`
+	Assignee     *Member `json:"assignee,omitempty"`
+	Description  string  `json:"description,omitempty"`
 }
 
 /*
@@ -169,4 +185,25 @@ func (g *Gitlab) ProjectMembers(id string) ([]*Member, error) {
 	}
 
 	return members, err
+}
+
+/*
+Lists all merge requests of a project.
+*/
+func (g *Gitlab) ProjectMergeRequests(id string, page int, per_page int, state string) ([]*MergeRequest, error) {
+	par := map[string]string{":id": id}
+	qry := map[string]string{
+		"state":    state,
+		"page":     strconv.Itoa(page),
+		"per_page": strconv.Itoa(per_page)}
+	url := g.ResourceUrlQuery(project_url_merge_requests, par, qry)
+
+	var mr []*MergeRequest
+
+	contents, err := g.buildAndExecRequest("GET", url, nil)
+	if err == nil {
+		err = json.Unmarshal(contents, &mr)
+	}
+
+	return mr, err
 }

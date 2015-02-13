@@ -42,3 +42,17 @@ func TestProjectBranches(t *testing.T) {
 	assert.Equal(t, len(branches), 2)
 	defer ts.Close()
 }
+
+func TestProjectMergeRequests(t *testing.T) {
+	ts, gitlab := Stub("stubs/projects/merge_requests/index.json")
+	defer ts.Close()
+	mr, err := gitlab.ProjectMergeRequests("1", 0, 30, "all")
+
+	assert.Equal(t, err, nil)
+	assert.Equal(t, len(mr), 1)
+
+	if len(mr) > 0 {
+		assert.Equal(t, mr[0].TargetBranch, "master")
+		assert.Equal(t, mr[0].SourceBranch, "test1")
+	}
+}
