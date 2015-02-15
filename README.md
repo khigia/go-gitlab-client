@@ -5,7 +5,7 @@ This is a fork of project https://github.com/plouc/go-gitlab-client
 
 go-gitlab-client is a simple client written in golang to consume gitlab API.
 
-[![Build Status](https://drone.io/github.com/Bugagazavr/go-gitlab-client/status.png)](https://drone.io/github.com/Bugagazavr/go-gitlab-client/latest)
+[![Build Status](https://travis-ci.org/Bugagazavr/go-gitlab-client.svg?branch=master)](https://travis-ci.org/Bugagazavr/go-gitlab-client)
 
 
 ##features
