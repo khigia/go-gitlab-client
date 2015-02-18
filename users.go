@@ -2,6 +2,7 @@ package gogitlab
 
 import (
 	"encoding/json"
+	"strconv"
 )
 
 const (
@@ -28,9 +29,12 @@ type User struct {
 	ColorSchemeId int    `json:"color_scheme_id,color_scheme_id"`
 }
 
-func (g *Gitlab) Users() ([]*User, error) {
+func (g *Gitlab) Users(page int, per_page int) ([]*User, error) {
 
-	url := g.ResourceUrl(users_url, nil)
+	qry := map[string]string{
+		"page":     strconv.Itoa(page),
+		"per_page": strconv.Itoa(per_page)}
+	url := g.ResourceUrlQuery(users_url, nil, qry)
 
 	var users []*User
 
