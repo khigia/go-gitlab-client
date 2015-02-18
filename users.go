@@ -30,7 +30,7 @@ type User struct {
 
 func (g *Gitlab) Users() ([]*User, error) {
 
-	url := g.ResourceUrl(user_url, nil)
+	url := g.ResourceUrl(users_url, nil)
 
 	var users []*User
 
