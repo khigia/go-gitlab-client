@@ -74,8 +74,8 @@ type Project struct {
 }
 
 type MergeRequest struct {
-	Id int `json:"id,omitempty"`
-	// IId
+	Id           int     `json:"id,omitempty"`
+	IId          int     `json:"iid,omitempty"`
 	TargetBranch string  `json:"target_branch,omitempty"`
 	SourceBranch string  `json:"source_branch,omitempty"`
 	ProjectId    int     `json:"project_id,omitempty"`
